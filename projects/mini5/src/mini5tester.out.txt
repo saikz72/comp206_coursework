@@ -75,7 +75,7 @@ Error, incorrect usage!
 </STDERR>
 <DATAFILEAFTER>
 AC,1024,John Smith
-TX,1024,2010-02-12,1500
+TX,1024,2010-02-12,1500cle
 </DATAFILEAFTER>
 return code is 1
 ********************************************************************************

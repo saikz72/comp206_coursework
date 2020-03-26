@@ -1,9 +1,10 @@
 /*
  * this program simulates how to create a bank accoun and conduction of transactions
  ** ******************************************************************
- *Author		Dept 		Date		Notes
+ *Author		Dept 		Date				Notes
  **********************************************************************
  *Saikou		Software eng	Mar 10, 2020    initial version
+ *Saikou		Software eng	March 26, 2020	Updated version
  *
  */
 
@@ -15,13 +16,10 @@
 //function protoype
 int addAccount(char* accNum, FILE *file);
 int makeDeposit(char* accNum, FILE *file, char* deposit);
-float makeWithdrawals(char* accNum, FILE *file, char* withdrawals);
-
-//global variables
-float sum = 0;
+int makeWithdrawals(char* accNum, FILE *file, char* withdrawals);
 
 int main(int argc, char* argv[]){
-	// if user inputs wrong number of arguments
+	// user inputs wrong number of arguments
 	if( argc == 1)
 	{
 		fprintf(stderr, "%s", "Error, incorrect usage!\n -a ACCTNUM NAME\n -d ACCTNUM DATE AMOUNT\n -w ACCTNUM DATE AMOUNT\n");
@@ -43,7 +41,7 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 	else
-		//correct number of arguments
+		// user inputs correct number of arguments
 	{
 		FILE *file = fopen("bankdata.csv", "r");		//open file in read mode
 		if(file == NULL)		//verify file does exist
@@ -55,7 +53,7 @@ int main(int argc, char* argv[]){
 		{
 			fclose(file);
 			file = fopen("bankdata.csv", "a+");		//open file in append mode
-			char checker = argv[1][1];			//swictch to determine creating account, depositing in account or withdrawing from account		
+			char checker = argv[1][1];				//swictch to determine creating account, depositing in account or withdrawing from account		
 
 			if(checker == 'a' && addAccount(argv[2], file) == 50)
 			{
@@ -73,7 +71,7 @@ int main(int argc, char* argv[]){
 				fclose(file);
 				return 50;
 			}
-			else if(checker == 'd' && makeDeposit(argv[2], file, argv[4]) == strtof(argv[4], NULL))
+			else if(checker == 'd' && makeDeposit(argv[2], file, argv[4]) == 75 )
 			{
 				fprintf(file, "TX,%s,%s,%s\n", argv[2], argv[3], argv[4]);
 				fclose(file);
@@ -84,22 +82,30 @@ int main(int argc, char* argv[]){
 				fclose(file);
 				return 50;		
 			}
-			else if (checker == 'w' && makeWithdrawals(argv[2], file, argv[4]) != 50 )
-			{
-				float x = atoi(argv[4]);
-				x = x * -1;
-				char str[10];
-				sprintf(str, "%f", x);
-				fprintf(file, "TX,%s,%s,%s", argv[2], argv[3], str);
-				fclose(file);
-			 }
-			else 
-			{	
-				fprintf(stderr, "Error, account number %s has only %s\n", argv[2], "99.40"); 
-			}
+			else{
+               		char arr[100];
+					float sum = 0;
+               		while(!feof(file)){
+						fgets(arr, 100, file);
+						if(strncmp(arr,"TX", 2) == 0 && strncmp(arr+3, argv[2], 4) == 0){
+							sum += strtof(arr+19, NULL);	
+							}
+                	}
+                
+               		float withdraw = strtof(argv[4], NULL);
+               		if(sum < withdraw){			//insufficient to make withdrawal
+						fprintf(stderr, "Error, account number %s has only %.2f\n", argv[2], sum);
+                   		 return 60;          
+               		}else{
+						fprintf(file, "TX,%s,%s,%.2f\n",argv[2],argv[3],withdraw * -1);
+						fclose(file);
+                    	return 0;          
+                }
+       		 }
 		}
 	}
 }
+// checkes if account exist before creating it
 
 int addAccount(char* accNum, FILE *file){
 	char arr[100];		//to store contents of file
@@ -110,29 +116,25 @@ int addAccount(char* accNum, FILE *file){
 		char *ptr = strtok(fileArray, ",");
 		while(ptr != NULL){
 			if(strcmp(accNum, ptr) == 0){
-				//printf("got in");
- 				return 50;
+ 				return 50;				//returns 50 if account exist
 			}else{
 				ptr = strtok(NULL, ",");
 			}	
 		}
 	}	
-
-	return 75;
+	return 75;		//returns 75 if account does not exist
 }
 
-/*
-method to make deposits into account
-*/
+
+//checks if account exist before making deposits 
+
 int makeDeposit(char* accNum, FILE *file, char* deposit){
 	//if account does not exist
 	if (addAccount(accNum, file) == 75){
 		return 50;	
 	}
 	else{
-		float dep = strtof(deposit, NULL);
-		printf("dep = %f\n", dep); 
-		return dep;	
+		return 75;	
 	}
 
 }
@@ -140,37 +142,10 @@ int makeDeposit(char* accNum, FILE *file, char* deposit){
 method to make withdrawals from account
 */
 
-float makeWithdrawals(char* accNum, FILE *file, char* withdrawals){
+int makeWithdrawals(char* accNum, FILE *file, char* withdrawals){
 	//if account does not exist
 	if(addAccount(accNum, file) == 75){
 		return 50;
 	}
-	else{
-		char arr[100];
-		int i;
-		char *tracker = NULL;
-
-		while(!feof(file)){
-			fgets(arr, 100, file);
-			char * point = arr;
-		
-			if(strstr(point, "TX") != NULL && strstr(point, accNum) != NULL){
-				char *token = strtok(point, ",");	//tokenize the string using ',' as a delimeter
-				while(token != NULL){
-					tracker = token;
-					token = strtok(NULL, ",");
-				}
-				float depo = atoi(tracker);
-				sum = sum + depo;
-			}		
-		}
-		float withdraw = strtof(withdrawals, NULL);
-		if(sum >= withdraw){
-			return 2.00;	
-		}else{
-			return sum;		
-		}
-	}
-}
-
-
+	return 0;		//default return value
+}	
